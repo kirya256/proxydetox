@@ -27,14 +27,14 @@ default-members = [
 exclude = ["tools"]
 
 [workspace.package]
-version = "0.12.0"
+version = "0.13.0"
 edition = "2024"
 homepage = "https://proxydetox.colorto.cc/"
 
 [workspace.dependencies]
 base64 = "0.22"
-boa_engine = { version = "0.20", features = ["annex-b"] }
-boa_gc = "0.20"
+boa_engine = { version = "0.21", features = ["annex-b"] }
+boa_gc = "0.21"
 bytes = "1.1"
 chrono = "0.4"
 clap = { version = "4.1", features = ["derive", "env"] }
@@ -46,6 +46,7 @@ detox_net = { path = "detox_net" }
 dirs = "6.0"
 futures-util = { version = "0.3", features = [ "alloc" ], default-features = false }
 gc = { version = "0.5", features = ["derive"] }
+glob = "0.3"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
@@ -60,7 +61,7 @@ proxydetoxlib = { path = "proxydetoxlib" }
 rustls = { version = "0.23", features = ["ring"] }
 rustls-native-certs = "0.8"
 rustls-pemfile = "2.2"
-socket2 = { version = "0.5", features = ["all"] }
+socket2 = { version = "0.6", features = ["all"] }
 spnego = { path = "spnego" }
 thiserror = "2.0"
 tokio = { version = "1", features = ["io-util", "rt-multi-thread", "net", "macros", "sync", "signal"] }

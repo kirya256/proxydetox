@@ -1,5 +1,5 @@
 use boa_engine::{
-    Context, JsNativeError, JsResult, JsString, JsValue, NativeFunction, Source, js_string,
+    Context, JsError, JsNativeError, JsResult, JsString, JsValue, NativeFunction, Source, js_string,
 };
 use http::Uri;
 use std::convert::Infallible;
@@ -31,13 +31,19 @@ impl Engine {
             1,
             NativeFunction::from_fn_ptr(alert),
         )
-        .expect("register_global_property");
+        .expect("register_global_builtin_callable alert");
         js.register_global_builtin_callable(
             js_string!("dnsResolve"),
             1,
             NativeFunction::from_fn_ptr(dns_resolve),
         )
-        .expect("register_global_property");
+        .expect("register_global_builtin_callable dnsResolve");
+        js.register_global_builtin_callable(
+            js_string!("shExpMatch"),
+            2,
+            NativeFunction::from_fn_ptr(sh_exp_match),
+        )
+        .expect("register_global_builtin_callable shExpMatch");
 
         // # Safety
         // We do not capture any varaibles which would require tracing.
@@ -110,34 +116,30 @@ impl Engine {
             .js
             .global_object()
             .get(js_string!("FindProxyForURL"), &mut self.js)
-            .map_err(|e| FindProxyError::InternalError(e.to_string()))?;
-        let proxy = match find_proxy_fn {
-            JsValue::Object(find_proxy_fn) => {
-                let uri = JsValue::from(JsString::from(uri.to_string()));
-                let host = JsValue::from(JsString::from(host));
-                find_proxy_fn
-                    .call(&JsValue::Null, &[uri, host], &mut self.js)
-                    .map_err(|e| FindProxyError::InternalError(e.to_string()))
-            }
-            _ => Err(FindProxyError::FindProxyForURLMissing)?,
-        };
+            .map_err(|e| FindProxyError::InternalError(e.to_string()))?
+            .as_object()
+            .ok_or(FindProxyError::FindProxyForURLMissing)?;
+
+        let uri = JsValue::from(JsString::from(uri.to_string()));
+        let host = JsValue::from(JsString::from(host));
+        let proxy = find_proxy_fn
+            .call(&JsValue::null(), &[uri, host], &mut self.js)
+            .map_err(|e| FindProxyError::InternalError(e.to_string()));
         tracing::Span::current().record("duration", debug(&start.elapsed()));
 
         let proxy = proxy?;
-        match &proxy {
-            JsValue::String(proxies) => {
-                let proxies = proxies
-                    .to_std_string()
-                    .map_err(|_| FindProxyError::EmptyResult)?;
-                proxies
-                    .parse::<Proxies>()
-                    .map_err(|_| FindProxyError::InvalidResult(proxies))
-            }
-            _ => Err(FindProxyError::InvalidResultType(format!(
+        let Some(proxies) = proxy.as_string() else {
+            return Err(FindProxyError::InvalidResultType(format!(
                 "{:?}",
                 proxy.get_type()
-            ))),
-        }
+            )));
+        };
+        let proxies = proxies
+            .to_std_string()
+            .map_err(|_| FindProxyError::EmptyResult)?;
+        proxies
+            .parse::<Proxies>()
+            .map_err(|_| FindProxyError::InvalidResult(proxies))
     }
 }
 
@@ -167,11 +169,8 @@ fn dns_resolve(_this: &JsValue, args: &[JsValue], context: &mut Context) -> JsRe
     let dns_cache = global
         .get(js_string!("_dnsCache"), context)
         .expect("_dnsCache");
-    let dns_cache = dns_cache.as_object();
+    let dns_cache = dns_cache.as_object().expect("object DnsCache");
     let mut dns_cache = dns_cache
-        .and_then(|obj| obj.try_borrow_mut().ok())
-        .expect("mut DnsCache");
-    let dns_cache = dns_cache
         .downcast_mut::<DnsCache>()
         .expect("downcast_mut<DnsCache>");
 
@@ -192,6 +191,26 @@ fn dns_resolve(_this: &JsValue, args: &[JsValue], context: &mut Context) -> JsRe
     };
 
     Ok(value)
+}
+
+fn sh_exp_match(_this: &JsValue, args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
+    let s = args
+        .first()
+        .ok_or(JsError::from_native(JsNativeError::typ()))?
+        .as_string()
+        .ok_or(JsError::from_native(JsNativeError::typ()))?
+        .to_std_string_lossy();
+    let pat = args
+        .get(1)
+        .ok_or(JsError::from_native(JsNativeError::typ()))?
+        .as_string()
+        .ok_or(JsError::from_native(JsNativeError::typ()))?
+        .to_std_string_lossy();
+
+    glob::Pattern::new(pat.as_str())
+        .map_err(|e| JsNativeError::error().with_message(e.to_string()).into())
+        .map(|p| p.matches(&s))
+        .map(JsValue::from)
 }
 
 fn my_ip_address(

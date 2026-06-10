@@ -7,14 +7,12 @@ defaults:
     shell: bash --noprofile --norc -euo pipefail {0}
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
   pull_request:
     branches:
       - main
+  release:
+    types:
+      - released
   workflow_dispatch:
 
 jobs:
@@ -26,7 +24,7 @@ jobs:
       rev: ${{ steps.rev.outputs.rev }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: Version
@@ -61,7 +59,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: macOS version
@@ -73,7 +71,7 @@ jobs:
         run: |
           printf 'OS_VER=%s\n' "$(lsb_release --short --release)" | tee -a $GITHUB_ENV
       - name: Bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: |
             ~/.cache/bazel_build_cache
@@ -122,12 +120,12 @@ jobs:
             aspect: "@rules_rust//rust:defs.bzl%rust_clippy_aspect"
             output_groups: "clippy_checks"
           - check: "format"
-            aspect: "@rules_rust//rust:defs.bzl%rust_clippy_aspect"
+            aspect: "@rules_rust//rust:defs.bzl%rustfmt_aspect"
             output_groups: "rustfmt_checks"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: Install Linux dependency
@@ -160,7 +158,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: Install Linux dependency
@@ -171,7 +169,7 @@ jobs:
         run: |
           printf 'OS_VER=%s\n' "$(lsb_release --short --release)" | tee -a $GITHUB_ENV
       - name: Bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: |
             ~/.cache/bazel_build_cache
@@ -182,7 +180,7 @@ jobs:
       - name: Run build
         run: bazel run --config=ci -- //www:copy
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5 # or specific "vX.X.X" version tag for this action
         with:
           path: public/
 
@@ -227,7 +225,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: macOS version
@@ -239,7 +237,7 @@ jobs:
         run: |
           printf 'OS_VER=%s\n' "$(lsb_release --short --release)" | tee -a $GITHUB_ENV
       - name: Bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: |
             ~/.cache/bazel_build_cache
@@ -271,7 +269,7 @@ jobs:
           --
           ${{ matrix.pkgfile }}
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pkg-bazel-${{ matrix.build }}
           path: ./${{ matrix.pkgfile }}
@@ -285,21 +283,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
         with:
           toolchain: stable
           profile: minimal
           override: true
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           key: ${{ runner.os }}-test
       #  see https://github.com/rust-lang/rust-bindgen/issues/1797
       - name: Install Windows dependency (LLVM)
-        uses: KyleMayes/install-llvm-action@v2.0.3
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
@@ -317,21 +315,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 1
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
         with:
           toolchain: stable
           profile: minimal
           override: true
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           key: ${{ runner.os }}-build
       #  see https://github.com/rust-lang/rust-bindgen/issues/1797
       - name: Install Windows dependency (LLVM)
-        uses: KyleMayes/install-llvm-action@v2.0.3
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
@@ -343,7 +341,7 @@ jobs:
         run: ./tools/mkzip.ps1
         shell: pwsh
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pkg-cargo-windows
           path: ./${{ steps.buildpkg.outputs.pkgfile }}
@@ -361,23 +359,23 @@ jobs:
 
     steps:
       - name: Download pkg artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: pkg-*
           merge-multiple: true
       - name: Show downloaded artifacts
         run: find . -name '*.deb' -o -name '*.pkg' -o -name '*.zip'
       - name: Create Release
-        if: ${{ github.event_name == 'push' && startswith(github.ref, 'refs/tags/') }}
+        if: ${{ github.event_name == 'release' }}
         run: |
-          gh --repo "${REPO}" release create "${VERSION}" --generate-notes *.deb *.pkg *.zip
+          gh --repo "${REPO}" release upload "v${VERSION}" *.deb *.pkg *.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          VERSION: v${{ needs.version.outputs.version }}
+          VERSION: ${{ needs.version.outputs.version }}
 
   pages:
-    if: ${{ github.event_name == 'push' && startswith(github.ref, 'refs/tags/') }}
+    if: ${{ github.event_name == 'release' }}
 
     needs:
       - bazel_www
@@ -397,7 +395,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
 
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection

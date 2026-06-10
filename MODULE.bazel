@@ -4,15 +4,17 @@ module(
 )
 
 # Apple
-bazel_dep(name = "apple_support", version = "1.22.0", repo_name = "build_bazel_apple_support")  # apple_support must come above rules_cc
-bazel_dep(name = "rules_apple", version = "3.21.1", repo_name = "build_bazel_rules_apple")
-bazel_dep(name = "rules_swift", version = "2.8.2", repo_name = "build_bazel_rules_swift")
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.1.1")
-bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "rules_rust", version = "0.61.0")
-bazel_dep(name = "rules_rust_mdbook", version = "0.61.0")
+bazel_dep(name = "apple_support", version = "2.6.1", repo_name = "build_bazel_apple_support")  # apple_support must come above rules_cc
+bazel_dep(name = "rules_apple", version = "4.5.3", repo_name = "build_bazel_rules_apple")
+bazel_dep(name = "rules_swift", version = "3.6.1", repo_name = "build_bazel_rules_swift")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "rules_pkg", version = "1.2.0")
+bazel_dep(name = "rules_python", version = "2.0.2")
+bazel_dep(name = "rules_rust", version = "0.70.0")
+bazel_dep(name = "rules_rust_mdbook", version = "0.70.0")
+bazel_dep(name = "rules_shell", version = "0.8.0")
 
 apple_cc_configure = use_extension(
     "@build_bazel_apple_support//crosstool:setup.bzl",
@@ -34,6 +36,7 @@ rust.toolchain(
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
     ],
+    versions = ["1.91.1"],
 )
 use_repo(rust, "rust_toolchains")
 
@@ -45,17 +48,6 @@ crate.from_cargo(
     cargo_lockfile = "//:Cargo.lock",
     manifests = [
         "//:Cargo.toml",
-        "//detox_auth:Cargo.toml",
-        "//detox_futures:Cargo.toml",
-        "//detox_hyper:Cargo.toml",
-        "//detox_net:Cargo.toml",
-        "//dnsdetox:Cargo.toml",
-        "//paceval:Cargo.toml",
-        "//paclib:Cargo.toml",
-        "//proxydetox:Cargo.toml",
-        "//proxydetoxlib:Cargo.toml",
-        "//spnego:Cargo.toml",
-        "//tools:Cargo.toml",
     ],
     supported_platform_triples = [
         "aarch64-apple-darwin",

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices"
+  ],
+  "baseBranchPatterns": [
+    "main"
+  ],
+  "gitAuthor": "GitHub Actions <github-actions[bot]@users.noreply.github.com>",
+  "configMigration": true,
+  "automergeStrategy": "fast-forward",
+  "automerge": true,
+  "prHourlyLimit": 4,
+  "rebaseWhen": "auto",
+  "labels": [
+    "dependencies"
+  ],
+  "enabledManagers": [
+    "bazel-module",
+    "bazelisk",
+    "cargo",
+    "github-actions"
+  ],
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "pinDigests": false
+    },
+    {
+      "matchDatasources": [
+        "*"
+      ],
+      "minimumReleaseAge": "14 days"
+    }
+  ]
+}
